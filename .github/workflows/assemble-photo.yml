@@ -11,13 +11,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Montar e substituir foto
         run: |
-          : > /tmp/photo.jpg
-          for n in 0 1 2 3 4; do
-            echo "Decodificando parte $n"
-            base64 -d "assets/photo_part${n}.txt" >> /tmp/photo.jpg
-          done
-          file /tmp/photo.jpg
-          cp /tmp/photo.jpg assets/casal-bodas.jpg
+          python - <<'PY'
+          import base64
+          parts=[]
+          for n in range(5):
+              with open(f'assets/photo_part{n}.txt','r',encoding='utf-8') as f:
+                  parts.append(f.read().strip())
+          raw=base64.b64decode(''.join(parts), validate=False)
+          print('bytes:', len(raw))
+          print('jpeg:', raw[:3] == b'\xff\xd8\xff', 'end:', raw[-2:] == b'\xff\xd9')
+          open('assets/casal-bodas.jpg','wb').write(raw)
+          PY
       - name: Publicar foto
         run: |
           git config user.name "github-actions[bot]"
