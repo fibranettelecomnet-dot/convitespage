@@ -24,6 +24,22 @@ jobs:
       - name: Baixar arquivos do repositório
         uses: actions/checkout@v4
 
+      - name: Montar foto do casal antes do deploy
+        run: |
+          python - <<'PY'
+          import base64
+          parts = []
+          for n in range(5):
+              with open(f'assets/photo_part{n}.txt', 'r', encoding='utf-8') as f:
+                  parts.append(f.read().strip())
+          raw = base64.b64decode(''.join(parts), validate=False)
+          if raw[:3] != b'\xff\xd8\xff' or raw[-2:] != b'\xff\xd9':
+              raise SystemExit('A foto reconstruída não é um JPEG válido.')
+          with open('assets/casal-bodas.jpg', 'wb') as f:
+              f.write(raw)
+          print(f'Foto montada com sucesso: {len(raw)} bytes')
+          PY
+
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
 
